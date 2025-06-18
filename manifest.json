@@ -8,18 +8,8 @@
     "activeTab"
   ],
   "action": {
-    "default_icon": {
-      "16": "assets/icon16.png",
-      "48": "assets/icon48.png",
-      "128": "assets/icon128.png"
-    },
     "default_popup": "src/popup.html",
     "default_title": "LinkedIn PMO Filter"
-  },
-  "icons": {
-    "16": "assets/icon16.png",
-    "48": "assets/icon48.png",
-    "128": "assets/icon128.png"
   },
   "content_scripts": [
     {
