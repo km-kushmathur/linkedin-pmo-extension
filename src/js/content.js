@@ -24,6 +24,8 @@ const TRIGGER_PHRASES = [
     "started a new position",
     "to share",
     "to announce",
+    "milestone",
+    "opportunity",
 ];
 const POST_SELECTOR = ".feed-shared-update-v2";
 let observer = null; // Keep a reference to the observer to disconnect it
