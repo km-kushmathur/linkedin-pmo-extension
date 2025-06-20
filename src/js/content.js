@@ -80,7 +80,6 @@ function unCensorAllPosts() {
     console.log("PMO Filter: All posts uncensored and listeners removed.");
 }
 
-// --- FIX: New function to reset the "scanned" state ---
 function resetScannedState() {
     const scannedPosts = document.querySelectorAll('[data-pmo-scanned="true"]');
     scannedPosts.forEach(post => {
@@ -96,10 +95,10 @@ function enableFilter() {
 
     const feedContainer = document.querySelector('main');
     if (feedContainer && !observer) {
-        observer = new MutationObserver(() => {
-            setTimeout(scanAndCensorAllPosts, 500);
-        });
+        // FIX: The observer now calls the scan function directly, with no timeout.
+        observer = new MutationObserver(scanAndCensorAllPosts);
         observer.observe(feedContainer, { childList: true, subtree: true });
+        console.log("PMO Filter: Observer enabled.");
     }
 }
 
@@ -108,9 +107,10 @@ function disableFilter() {
     if (observer) {
         observer.disconnect();
         observer = null;
+        console.log("PMO Filter: Observer disabled.");
     }
     unCensorAllPosts();
-    resetScannedState(); // --- FIX: Call the new reset function ---
+    resetScannedState(); 
 }
 
 // --- Execution ---
