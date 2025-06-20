@@ -1,8 +1,6 @@
 console.log("PMO Filter: Content script injected and running!");
 
 // --- Configuration ---
-// Add any keywords or phrases you want to detect here.
-// The script will not be case-sensitive.
 const TRIGGER_PHRASES = [
     "i'm thrilled to announce",
     "i'm excited to announce",
@@ -21,90 +19,112 @@ const TRIGGER_PHRASES = [
     "used ai to build",
     "so can you!",
     "don’t get left behind",
-    "I’m happy to share",
-    "I am happy to share",
+    "i'm happy to share",
+    "i am happy to share",
     "started a new position",
+    "to share",
+    "to announce",
 ];
-
-// This is the CSS selector for a single post on the LinkedIn feed.
-// LinkedIn might change this in the future, which could break the extension.
 const POST_SELECTOR = ".feed-shared-update-v2";
+let observer = null; // Keep a reference to the observer to disconnect it
+
+// --- Named Event Handlers ---
+function revealPostOnHover(event) {
+    event.currentTarget.style.filter = "blur(0px)";
+}
+
+function blurPostOnMouseOut(event) {
+    event.currentTarget.style.filter = "blur(8px)";
+}
 
 // --- Core Logic ---
-
-/**
- * Scans a single post element to see if it contains any trigger phrases.
- * @param {HTMLElement} post - The DOM element of the post to scan.
- * @returns {boolean} - True if a trigger phrase is found, otherwise false.
- */
 function postContainsTrigger(post) {
     const postText = post.innerText.toLowerCase();
     for (const phrase of TRIGGER_PHRASES) {
         if (postText.includes(phrase)) {
-            console.log(`PMO Filter: Found trigger phrase "${phrase}"`);
             return true;
         }
     }
     return false;
 }
 
-/**
- * Censors a single post element by blurring it.
- * @param {HTMLElement} post - The DOM element of the post to censor.
- */
 function censorPost(post) {
     post.style.filter = "blur(8px)";
-    post.style.transition = "filter 0.3s"; // Adds a smooth transition effect
-    
-    // Optional: Add a hover effect to reveal the post
-    post.addEventListener('mouseover', () => {
-        post.style.filter = "blur(0px)";
-    });
-     post.addEventListener('mouseout', () => {
-        post.style.filter = "blur(8px)";
-    });
+    post.style.transition = "filter 0.3s";
+    post.dataset.pmoCensored = "true";
+
+    post.addEventListener('mouseover', revealPostOnHover);
+    post.addEventListener('mouseout', blurPostOnMouseOut);
 }
 
-/**
- * Finds all posts on the page and censors them if they contain trigger phrases.
- * It only processes posts that haven't been scanned yet.
- */
 function scanAndCensorAllPosts() {
     const posts = document.querySelectorAll(POST_SELECTOR);
     posts.forEach(post => {
-        // Check if we've already processed this post to avoid redundant work
-        if (post.dataset.pmoScanned) {
-            return;
-        }
-
-        if (postContainsTrigger(post)) {
-            censorPost(post);
-        }
-
-        // Mark the post as scanned so we don't process it again
+        if (post.dataset.pmoScanned) return;
+        if (postContainsTrigger(post)) censorPost(post);
         post.dataset.pmoScanned = "true";
     });
 }
 
+function unCensorAllPosts() {
+    const censoredPosts = document.querySelectorAll('[data-pmo-censored="true"]');
+    censoredPosts.forEach(post => {
+        post.style.filter = "";
+        post.style.transition = "";
+        post.removeEventListener('mouseover', revealPostOnHover);
+        post.removeEventListener('mouseout', blurPostOnMouseOut);
+        delete post.dataset.pmoCensored;
+    });
+    console.log("PMO Filter: All posts uncensored and listeners removed.");
+}
+
+// --- FIX: New function to reset the "scanned" state ---
+function resetScannedState() {
+    const scannedPosts = document.querySelectorAll('[data-pmo-scanned="true"]');
+    scannedPosts.forEach(post => {
+        delete post.dataset.pmoScanned;
+    });
+    console.log("PMO Filter: Scanned state reset for all posts.");
+}
+
+// --- State Management ---
+function enableFilter() {
+    console.log("PMO Filter: Enabling...");
+    scanAndCensorAllPosts();
+
+    const feedContainer = document.querySelector('main');
+    if (feedContainer && !observer) {
+        observer = new MutationObserver(() => {
+            setTimeout(scanAndCensorAllPosts, 500);
+        });
+        observer.observe(feedContainer, { childList: true, subtree: true });
+    }
+}
+
+function disableFilter() {
+    console.log("PMO Filter: Disabling...");
+    if (observer) {
+        observer.disconnect();
+        observer = null;
+    }
+    unCensorAllPosts();
+    resetScannedState(); // --- FIX: Call the new reset function ---
+}
 
 // --- Execution ---
 
-// The LinkedIn feed loads content dynamically as you scroll.
-// A MutationObserver is the correct way to watch for new posts being added to the feed.
-const observer = new MutationObserver((mutations) => {
-    // We can run our scan function whenever the feed changes.
-    // A slight delay can help ensure the new post is fully rendered.
-    setTimeout(scanAndCensorAllPosts, 500);
+// Listen for messages from the popup
+chrome.runtime.onMessage.addListener((request) => {
+    if (request.pmoFilterEnabled) {
+        enableFilter();
+    } else {
+        disableFilter();
+    }
 });
 
-// Start observing the main feed container for changes.
-const feedContainer = document.querySelector('main');
-if (feedContainer) {
-    observer.observe(feedContainer, {
-        childList: true,
-        subtree: true
-    });
-}
-
-// Run the scan once on page load to catch the initial posts.
-setTimeout(scanAndCensorAllPosts, 1000);
+// Check the initial state when the page loads
+chrome.storage.local.get('pmoFilterEnabled', (data) => {
+    if (data.pmoFilterEnabled) {
+        enableFilter();
+    }
+});
