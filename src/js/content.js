@@ -7,6 +7,8 @@ const TRIGGER_PHRASES = [
     "i'm thrilled to announce",
     "i'm excited to announce",
     "i am excited to announce",
+    "i'm excited to share",
+    "i am excited to share",
     "i am thrilled to announce",
     "i am thrilled",
     "so excited to share",
@@ -18,7 +20,9 @@ const TRIGGER_PHRASES = [
     "dream internship",
     "used ai to build",
     "so can you!",
-    "don’t get left behind"
+    "don’t get left behind",
+    "I’m happy to share",
+    "I am happy to share",
 ];
 
 // This is the CSS selector for a single post on the LinkedIn feed.
