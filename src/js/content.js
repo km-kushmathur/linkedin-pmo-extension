@@ -23,6 +23,7 @@ const TRIGGER_PHRASES = [
     "don’t get left behind",
     "I’m happy to share",
     "I am happy to share",
+    "started a new position",
 ];
 
 // This is the CSS selector for a single post on the LinkedIn feed.
