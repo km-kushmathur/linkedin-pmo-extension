@@ -1,6 +1,6 @@
 console.log("PMO Filter: Content script injected and running!");
 
-// --- Configuration ---
+// PMO Phrases
 const TRIGGER_PHRASES = [
     "i'm thrilled to announce",
     "i'm excited to announce",
@@ -28,18 +28,17 @@ const TRIGGER_PHRASES = [
     "opportunity",
 ];
 const POST_SELECTOR = ".feed-shared-update-v2";
-let observer = null; // Keep a reference to the observer to disconnect it
+let observer = null;
 
-// --- Named Event Handlers ---
+// Reveal and Blur Functions
 function revealPostOnHover(event) {
     event.currentTarget.style.filter = "blur(0px)";
 }
-
 function blurPostOnMouseOut(event) {
     event.currentTarget.style.filter = "blur(8px)";
 }
 
-// --- Core Logic ---
+// Check if a post contains any PMO trigger phrases
 function postContainsTrigger(post) {
     const postText = post.innerText.toLowerCase();
     for (const phrase of TRIGGER_PHRASES) {
@@ -88,14 +87,13 @@ function resetScannedState() {
     console.log("PMO Filter: Scanned state reset for all posts.");
 }
 
-// --- State Management ---
+// Manage the filter state
 function enableFilter() {
     console.log("PMO Filter: Enabling...");
     scanAndCensorAllPosts();
 
     const feedContainer = document.querySelector('main');
     if (feedContainer && !observer) {
-        // FIX: The observer now calls the scan function directly, with no timeout.
         observer = new MutationObserver(scanAndCensorAllPosts);
         observer.observe(feedContainer, { childList: true, subtree: true });
         console.log("PMO Filter: Observer enabled.");
@@ -113,9 +111,7 @@ function disableFilter() {
     resetScannedState(); 
 }
 
-// --- Execution ---
-
-// Listen for messages from the popup
+// Popup script sends a message to content script to toggle the filter
 chrome.runtime.onMessage.addListener((request) => {
     if (request.pmoFilterEnabled) {
         enableFilter();
