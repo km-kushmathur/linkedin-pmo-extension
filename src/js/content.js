@@ -1,6 +1,6 @@
 console.log("PMO Filter: Content script injected and running!");
 
-// --- Configuration ---
+// PMO Phrases
 const TRIGGER_PHRASES = [
     "i'm thrilled to announce",
     "i'm excited to announce",
@@ -33,16 +33,15 @@ const POST_SELECTOR = "div[data-urn^='urn:li:share:'], div[data-urn^='urn:li:act
 let observer = null;
 let scanInterval = null;
 
-// --- Named Event Handlers ---
+// Reveal and Blur Functions
 function revealPostOnHover(event) {
     event.currentTarget.style.filter = "blur(0px)";
 }
-
 function blurPostOnMouseOut(event) {
     event.currentTarget.style.filter = "blur(8px)";
 }
 
-// --- Core Logic ---
+// Check if a post contains any PMO trigger phrases
 function postContainsTrigger(post) {
     const postText = post.innerText.toLowerCase();
     for (const phrase of TRIGGER_PHRASES) {
@@ -94,7 +93,7 @@ function resetScannedState() {
     console.log("PMO Filter: Scanned state reset for all posts.");
 }
 
-// --- State Management ---
+// Manage the filter state
 function enableFilter() {
     console.log("PMO Filter: Enabling filter...");
     resetScannedState();

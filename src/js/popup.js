@@ -2,19 +2,19 @@
 document.addEventListener('DOMContentLoaded', () => {
     const toggleSwitch = document.getElementById('toggleSwitch');
 
-    // Get the current saved state and set the switch accordingly
+    // Get the current saved state and set the switch
     chrome.storage.local.get('pmoFilterEnabled', (data) => {
         toggleSwitch.checked = !!data.pmoFilterEnabled;
     });
 
-    // Listen for changes on the toggle switch
+    // Check for toggle switch changes
     toggleSwitch.addEventListener('change', () => {
         const isEnabled = toggleSwitch.checked;
         
         // Save the new state
         chrome.storage.local.set({ pmoFilterEnabled: isEnabled });
 
-        // Send a message to the active tab's content script to update its behavior
+        // Notify content script to update the state
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             chrome.tabs.sendMessage(tabs[0].id, { pmoFilterEnabled: isEnabled });
         });
