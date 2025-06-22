@@ -27,8 +27,11 @@ const TRIGGER_PHRASES = [
     "milestone",
     "opportunity",
 ];
-const POST_SELECTOR = ".feed-shared-update-v2";
-let observer = null; // Keep a reference to the observer to disconnect it
+// --- THIS IS THE UPDATED LINE ---
+const POST_SELECTOR = "div[data-urn^='urn:li:share:'], div[data-urn^='urn:li:activity:']";
+// ---
+let observer = null;
+let scanInterval = null;
 
 // --- Named Event Handlers ---
 function revealPostOnHover(event) {
@@ -44,6 +47,7 @@ function postContainsTrigger(post) {
     const postText = post.innerText.toLowerCase();
     for (const phrase of TRIGGER_PHRASES) {
         if (postText.includes(phrase)) {
+            console.log("PMO Filter: Found trigger phrase '" + phrase + "' in post. Censoring.");
             return true;
         }
     }
@@ -54,13 +58,15 @@ function censorPost(post) {
     post.style.filter = "blur(8px)";
     post.style.transition = "filter 0.3s";
     post.dataset.pmoCensored = "true";
-
     post.addEventListener('mouseover', revealPostOnHover);
     post.addEventListener('mouseout', blurPostOnMouseOut);
 }
 
 function scanAndCensorAllPosts() {
     const posts = document.querySelectorAll(POST_SELECTOR);
+    if (posts.length > 0) {
+        console.log(`PMO Filter: Scanning ${posts.length} posts.`);
+    }
     posts.forEach(post => {
         if (post.dataset.pmoScanned) return;
         if (postContainsTrigger(post)) censorPost(post);
@@ -90,33 +96,40 @@ function resetScannedState() {
 
 // --- State Management ---
 function enableFilter() {
-    console.log("PMO Filter: Enabling...");
+    console.log("PMO Filter: Enabling filter...");
+    resetScannedState();
     scanAndCensorAllPosts();
+
+    if (!scanInterval) {
+        scanInterval = setInterval(scanAndCensorAllPosts, 500);
+    }
 
     const feedContainer = document.querySelector('main');
     if (feedContainer && !observer) {
-        // FIX: The observer now calls the scan function directly, with no timeout.
         observer = new MutationObserver(scanAndCensorAllPosts);
         observer.observe(feedContainer, { childList: true, subtree: true });
-        console.log("PMO Filter: Observer enabled.");
+        console.log("PMO Filter: MutationObserver enabled.");
     }
 }
 
 function disableFilter() {
-    console.log("PMO Filter: Disabling...");
+    console.log("PMO Filter: Disabling filter...");
     if (observer) {
         observer.disconnect();
         observer = null;
-        console.log("PMO Filter: Observer disabled.");
+        console.log("PMO Filter: MutationObserver disabled.");
+    }
+    if (scanInterval) {
+        clearInterval(scanInterval);
+        scanInterval = null;
     }
     unCensorAllPosts();
-    resetScannedState(); 
+    resetScannedState();
 }
 
 // --- Execution ---
-
-// Listen for messages from the popup
 chrome.runtime.onMessage.addListener((request) => {
+    console.log("PMO Filter: Message received from background/popup", request);
     if (request.pmoFilterEnabled) {
         enableFilter();
     } else {
@@ -124,9 +137,9 @@ chrome.runtime.onMessage.addListener((request) => {
     }
 });
 
-// Check the initial state when the page loads
 chrome.storage.local.get('pmoFilterEnabled', (data) => {
     if (data.pmoFilterEnabled) {
+        console.log("PMO Filter: Filter is enabled on page load.");
         enableFilter();
     }
 });

@@ -5,7 +5,9 @@
   "description": "Filters triggering and self-congratulatory posts from the LinkedIn feed.",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "webNavigation",
+    "tabs"
   ],
   "action": {
     "default_popup": "src/popup.html",
@@ -23,7 +25,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.linkedin.com/feed/"],
+      "matches": ["https://www.linkedin.com/*"],
       "js": ["src/js/content.js"]
     }
   ],
