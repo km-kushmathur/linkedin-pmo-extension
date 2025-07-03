@@ -1,12 +1,10 @@
-// src/js/ai-classifier.js
 // Dynamic import to reduce initial bundle size
-
 class AIClassifier {
     constructor() {
         this.classifier = null;
         this.initialized = false;
         this.initializationPromise = null;
-        this.confidenceThreshold = 0.7; // More reasonable threshold
+        this.confidenceThreshold = 0.7; // More reasonable threshold (probably)
         this.pipeline = null; // Will be loaded dynamically
     }
 
@@ -62,7 +60,7 @@ class AIClassifier {
                 return false;
             }
 
-            // Improved regex with word boundaries and more patterns
+            // Word boundaries prevent filtering for substrings
             const braggyPatterns = [
                 /\b(?:announce|excited|thrilled|landed|internship|milestone|achievement|promotion|proud)\b/i,
                 /\b(?:happy to share|starting a new position|new position|new job|humbled|grateful)\b/i,
@@ -91,7 +89,7 @@ class AIClassifier {
 
         } catch (error) {
             console.error('AI Classifier: Error during classification:', error);
-            // Fallback to basic regex matching if AI fails
+            // Fallback to basic string detection if AI doesn't load (pls fix)
             const basicBraggyPattern = /\b(?:excited|thrilled|proud|announce|happy to share|new job|new position)\b/i;
             const fallbackResult = basicBraggyPattern.test(text);
             console.log('AI Classifier: Using fallback classification:', fallbackResult);
@@ -99,7 +97,7 @@ class AIClassifier {
         }
     }
 
-    // Method to update confidence threshold
+    // Confidence threshold can be edited
     setConfidenceThreshold(threshold) {
         if (typeof threshold === 'number' && threshold >= 0 && threshold <= 1) {
             this.confidenceThreshold = threshold;
