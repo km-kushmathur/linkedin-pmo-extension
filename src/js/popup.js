@@ -4,7 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Get the current saved state and set the switch
     chrome.storage.local.get('pmoFilterEnabled', (data) => {
-        toggleSwitch.checked = !!data.pmoFilterEnabled;
+        // Default to ON if not set
+        if (typeof data.pmoFilterEnabled === 'undefined') {
+            toggleSwitch.checked = true;
+            chrome.storage.local.set({ pmoFilterEnabled: true });
+        } else {
+            toggleSwitch.checked = !!data.pmoFilterEnabled;
+        }
     });
 
     // Check for toggle switch changes

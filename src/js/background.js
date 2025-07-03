@@ -1,18 +1,13 @@
 console.log("PMO Filter: Background service worker started.");
 
-chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) {
-    // Ensure we're acting on the main page navigation and not an iframe.
-    if (details.frameId !== 0) {
-        return;
-    }
-
-    if (details.url && details.url.includes("linkedin.com/feed")) {
-        // The URL has changed to the LinkedIn feed.
-        // Check storage to see if the filter should be active.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    // Ensure the tab is fully loaded and on the LinkedIn feed
+    if (changeInfo.status === 'complete' && tab.url && tab.url.includes("linkedin.com/feed")) {
+        // Check the saved state of the filter
         chrome.storage.local.get('pmoFilterEnabled', (data) => {
+            // If the filter is enabled, send a message to the content script
             if (data.pmoFilterEnabled) {
-                // Send a message to the content script in the active tab to enable the filter.
-                chrome.tabs.sendMessage(details.tabId, { pmoFilterEnabled: true });
+                chrome.tabs.sendMessage(tabId, { pmoFilterEnabled: true });
             }
         });
     }

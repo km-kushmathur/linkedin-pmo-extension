@@ -10,7 +10,7 @@
     "tabs"
   ],
   "action": {
-    "default_popup": "src/popup.html",
+    "default_popup": "popup.html",
     "default_title": "LinkedIn PMO Filter",
     "default_icon": {
       "16": "icons/icon16.png",
@@ -26,10 +26,11 @@
   "content_scripts": [
     {
       "matches": ["https://www.linkedin.com/*"],
-      "js": ["src/js/content.js"]
+      "js": ["js/content.js"],
+      "type": "module"
     }
   ],
   "background": {
-    "service_worker": "src/js/background.js"
+    "service_worker": "js/background.js"
   }
 }
