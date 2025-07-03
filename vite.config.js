@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
@@ -6,7 +5,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 export default defineConfig({
   build: {
     outDir: 'dist',
-    chunkSizeWarningLimit: 1000, // Increase warning limit for AI models
+    chunkSizeWarningLimit: 1000, // Increase warning limit for models
     rollupOptions: {
       input: {
         popup: resolve(__dirname, 'src/popup.html'),
@@ -36,7 +35,7 @@ export default defineConfig({
       },
       external: [],
     },
-    target: 'es2020', // Support for modern JavaScript features
+    target: 'es2020',
   },
   define: {
     global: 'globalThis', // Fix for some libraries that expect global
