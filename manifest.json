@@ -1,35 +1,29 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn PMO Filter",
-  "version": "0.1.0",
+  "version": "1.0",
   "description": "Filters triggering and self-congratulatory posts from the LinkedIn feed.",
-  "permissions": [
-    "storage",
-    "activeTab",
-    "webNavigation",
-    "tabs"
-  ],
-  "action": {
-    "default_popup": "src/popup.html",
-    "default_title": "LinkedIn PMO Filter",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "32": "icons/icon32.png"
-    }
-  },
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
+  "action": {
+    "default_popup": "src/popup.html"
+  },
+  "host_permissions": [
+    "https://*.linkedin.com/*"
+  ],
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://www.linkedin.com/*"],
-      "js": ["src/js/content.js"]
+      "matches": ["https://*.linkedin.com/*"],
+      "js": ["src/js/content.js"],
+      "css": ["src/css/content.css"]
     }
-  ],
-  "background": {
-    "service_worker": "src/js/background.js"
-  }
+  ]
 }
