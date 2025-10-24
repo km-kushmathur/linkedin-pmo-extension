@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LinkedIn Post Blurrer</title>
+  <style>
+    body {
+      width: 250px;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 10px;
+    }
+    h1 {
+      font-size: 16px;
+    }
+    p {
+        font-size: 12px;
+    }
+    input {
+      width: 90%;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 5px 10px;
+    }
+    #status {
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>LinkedIn Post Blurrer</h1>
+  <p>Enter your Hugging Face API Token below. Get one from huggingface.co.</p>
+  
+  <input type="password" id="apiToken" placeholder="hf_...">
+  <button id="saveButton">Save</button>
+  <div id="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

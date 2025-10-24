@@ -1,0 +1,8 @@
+.blurred {
+  filter: blur(8px);
+  transition: filter 0.3s ease;
+}
+
+.blurred:hover {
+  filter: blur(0);
+}
