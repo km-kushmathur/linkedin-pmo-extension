@@ -12,12 +12,14 @@ const candidateLabels = [
   "internship update or reflection", // New label for internships
   "summer opportunity", // More specific "summer" label
   "joining a company this summer", // BLUR 
+  "what I've been up to recently", // BLUR
   "sharing a news article or link",
   "asking a question for discussion",
   "company marketing or event",
   "general work-related comment",
   "technical project discussion",
-  "industry observation"
+  "industry observation",
+  "holiday or special day"
 ];
 
 // 2. Update the labels to blur
@@ -26,7 +28,8 @@ const labelsToBlur = [
   "started a new position",
   "internship update or reflection",
   "summer opportunity",
-  "joining a company this summer"
+  "joining a company this summer",
+  "what I've been up to recently"
 ];
 
 // --- Retry wrapper for fetch ---
