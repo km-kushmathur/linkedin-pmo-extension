@@ -19,7 +19,8 @@ const candidateLabels = [
   "general work-related comment",
   "technical project discussion",
   "industry observation",
-  "holiday or special day"
+  "holiday or special day",
+  "advertisement"
 ];
 
 // 2. Update the labels to blur
