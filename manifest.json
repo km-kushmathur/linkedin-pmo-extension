@@ -5,6 +5,7 @@
   "description": "Blurs LinkedIn posts that are detected as boastful.",
   "permissions": [
     "storage",
+    "activeTab",
     "runtime",
     "scripting",
     "tabs"

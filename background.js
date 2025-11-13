@@ -1,155 +1,106 @@
-// background.js
+// background.js — stable direct inference version
 
 const modelId = "facebook/bart-large-mnli";
 const API_URL = `https://api-inference.huggingface.co/models/${modelId}`;
 
-// In background.js
-
-// 1. Refined candidate labels to target your specific goals
 const candidateLabels = [
-  "promotion announcement", // BLUR
-  "started a new position", // BLUR
-  "internship update or reflection", // New label for internships
-  "summer opportunity", // More specific "summer" label
-  "joining a company this summer", // BLUR 
-  "what I've been up to recently", // BLUR
-  "sharing a news article or link",
-  "asking a question for discussion",
-  "company marketing or event",
-  "general work-related comment",
-  "technical project discussion",
-  "industry observation",
-  "holiday or special day",
-  "advertisement"
+  "promotion announcement","started a new position","internship update or reflection",
+  "summer opportunity","joining a company this summer","what I've been up to recently",
+  "sharing a news article or link","asking a question for discussion","company marketing or event",
+  "general work-related comment","technical project discussion","industry observation",
+  "holiday or special day","advertisement"
 ];
 
-// 2. Update the labels to blur
-const labelsToBlur = [
-  "promotion announcement",
-  "started a new position",
-  "internship update or reflection",
-  "summer opportunity",
-  "joining a company this summer",
-  "what I've been up to recently"
-];
+const labelsToBlur = new Set([
+  "promotion announcement","started a new position","internship update or reflection",
+  "summer opportunity","joining a company this summer","what I've been up to recently"
+]);
 
-// --- Retry wrapper for fetch ---
-async function fetchWithRetry(url, options, retries = 3, delay = 2000) {
+// --- Retry helper ---
+async function fetchWithRetry(url, options, retries = 2, delay = 800) {
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch(url, options);
-      if (response.ok) return response;
-      console.warn(`HF API call failed (attempt ${i + 1}): ${response.status}`);
+      const res = await fetch(url, options);
+      console.log(`HF API status: ${res.status} (attempt ${i + 1})`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return data;
     } catch (err) {
-      console.warn(`HF API network error (attempt ${i + 1}): ${err.message}`);
+      console.warn("HF fetch error:", err.message);
+      if (i < retries - 1) await new Promise(r => setTimeout(r, delay));
     }
-    await new Promise(res => setTimeout(res, delay));
   }
-  throw new Error(`API request failed after ${retries} retries`);
+  throw new Error("HF API failed after retries");
 }
 
-// --- Request queue for throttling ---
+// --- Queue manager ---
 let queue = [];
-let isProcessing = false;
+let running = false;
 
 function enqueueRequest(text, apiToken, callback) {
   queue.push({ text, apiToken, callback });
-  processQueue();
+  if (!running) processQueue();
 }
 
 async function processQueue() {
-  if (isProcessing || queue.length === 0) return;
-  isProcessing = true;
+  if (queue.length === 0) return (running = false);
+  running = true;
 
   const { text, apiToken, callback } = queue.shift();
-
   try {
     const result = await classifyPost(text, apiToken);
     callback(result);
-  } catch (err) {
-    callback({ error: err.message });
+  } catch (e) {
+    callback({ error: e.message });
   }
 
-  // process next after a short delay
-  setTimeout(() => {
-    isProcessing = false;
-    processQueue();
-  }, 1000);
+  // slight spacing prevents throttling
+  setTimeout(processQueue, 400);
 }
 
-// --- Classification function ---
+// --- Classification logic ---
 async function classifyPost(text, apiToken) {
-  try {
-    const response = await fetchWithRetry(API_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        inputs: text,
-        parameters: { 
-          candidate_labels: candidateLabels, 
-          multi_label: false   // best match only
-        },
-      }),
-    });
+  const payload = {
+    inputs: text,
+    parameters: { candidate_labels: Array.from(candidateLabels), multi_label: false }
+  };
 
-    const data = await response.json();
-    console.log("✅ Raw HF response:", JSON.stringify(data, null, 2));
+  const data = await fetchWithRetry(API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiToken}`,
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
 
-    const result = Array.isArray(data) ? data[0] : data;
-    if (!result.labels || !result.scores) {
-      throw new Error("Unexpected API response format");
-    }
+  const result = Array.isArray(data) ? data[0] : data;
+  if (!result?.labels || !result?.scores) throw new Error("Unexpected response");
 
-// In background.js, replace the final logic in the classifyPost function
+  const topLabel = result.labels[0];
+  const topScore = result.scores[0];
+  const blurScore = result.labels.reduce(
+    (sum, l, i) => sum + (labelsToBlur.has(l) ? result.scores[i] : 0),
+    0
+  );
 
-    const topLabel = result.labels[0];
-    const topScore = result.scores[0];
-    console.log(`🏆 Top label: ${topLabel} (${topScore.toFixed(4)})`);
+  console.log(`🏆 ${topLabel} (${topScore.toFixed(2)}), Σ blur: ${blurScore.toFixed(2)}`);
 
-    // --- NEW LOGIC: Calculate a combined score for all blur-worthy labels ---
-    let combinedBlurScore = 0;
-    result.labels.forEach((label, index) => {
-      if (labelsToBlur.includes(label)) {
-        combinedBlurScore += result.scores[index];
-      }
-    });
-
-    console.log(`ℹ️ Combined score for blurrable labels: ${combinedBlurScore.toFixed(4)}`);
-
-    const combinedThreshold = 0.5; // Use a new threshold for the combined score
-
-    if (combinedBlurScore >= combinedThreshold) {
-      console.log(`🔴 Blur triggered by combined score of ${combinedBlurScore.toFixed(4)} (Top Label: '${topLabel}')`);
-      // We can still return the top label just for informational purposes
-      return { shouldBlur: true, label: topLabel, score: combinedBlurScore };
-    }
-
-    console.log("ℹ️ Not blurred — combined score was below the threshold.");
-    return { shouldBlur: false, label: topLabel, score: topScore };
-  } catch (error) {
-    console.error("❌ classifyPost error:", error.message);
-    return { error: error.message };
-  }
+  return {
+    shouldBlur: blurScore >= 0.5,
+    label: topLabel,
+    score: blurScore >= 0.5 ? blurScore : topScore
+  };
 }
 
-// --- Listener for messages from content.js ---
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "classifyText") {
-    chrome.storage.local.get(["hf_api_token"], (result) => {
-      const apiToken = result.hf_api_token;
-
-      if (!apiToken) {
-        console.error("CRITICAL: API Token not found. Please set it in the popup.");
-        sendResponse({ error: "API token not set." });
-        return;
-      }
-
-      enqueueRequest(request.text, apiToken, sendResponse);
+// --- Chrome message listener ---
+chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
+  if (req.action === "classifyText") {
+    chrome.storage.local.get(["hf_api_token"], (res) => {
+      if (!res.hf_api_token) return sendResponse({ error: "Missing API token" });
+      enqueueRequest(req.text, res.hf_api_token, sendResponse);
     });
-
-    return true; // keep channel open
+    return true;
   }
 });
