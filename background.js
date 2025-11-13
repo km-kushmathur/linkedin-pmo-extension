@@ -1,7 +1,7 @@
 // background.js — stable direct inference version
 
 const modelId = "facebook/bart-large-mnli";
-const API_URL = `https://api-inference.huggingface.co/models/${modelId}`;
+const API_URL = `https://router.huggingface.co/hf-inference/models/${modelId}`;
 
 const candidateLabels = [
   "promotion announcement","started a new position","internship update or reflection",
