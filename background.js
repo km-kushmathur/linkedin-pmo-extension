@@ -4,16 +4,28 @@ const modelId = "facebook/bart-large-mnli";
 const API_URL = `https://router.huggingface.co/hf-inference/models/${modelId}`;
 
 const candidateLabels = [
-  "promotion announcement","started a new position","internship update or reflection",
-  "summer opportunity","joining a company this summer","what I've been up to recently",
-  "sharing a news article or link","asking a question for discussion","company marketing or event",
-  "general work-related comment","technical project discussion","industry observation",
-  "holiday or special day","advertisement"
+  "started a new position",
+  "internship update or reflection",
+  "summer opportunity",
+  "joining a company this summer",
+  "what I've been up to recently",
+  "sharing a news article or link",
+  "asking a question for discussion",
+  "company marketing or event",
+  "general work-related comment",
+  "technical project discussion",
+  "industry observation",
+  "holiday or special day",
+  "advertisement",
+  "new technology"
 ];
 
 const labelsToBlur = new Set([
-  "promotion announcement","started a new position","internship update or reflection",
-  "summer opportunity","joining a company this summer","what I've been up to recently"
+  "started a new position",
+  "internship update or reflection",
+  "summer opportunity",
+  "joining a company this summer",
+  "what I've been up to recently"
 ]);
 
 // --- Retry helper ---
@@ -58,7 +70,7 @@ async function processQueue() {
   setTimeout(processQueue, 400);
 }
 
-// --- Classification logic ---
+// --- Classification logic (FIXED with new logging) ---
 async function classifyPost(text, apiToken) {
   const payload = {
     inputs: text,
@@ -75,24 +87,63 @@ async function classifyPost(text, apiToken) {
     body: JSON.stringify(payload)
   });
 
-  const result = Array.isArray(data) ? data[0] : data;
-  if (!result?.labels || !result?.scores) throw new Error("Unexpected response");
+  // --- START: PARSING LOGIC ---
+  if (!Array.isArray(data)) {
+    console.error("❌ Error: API response was not an array.");
+    throw new Error("Unexpected response structure: expected an array.");
+  }
 
-  const topLabel = result.labels[0];
-  const topScore = result.scores[0];
-  const blurScore = result.labels.reduce(
-    (sum, l, i) => sum + (labelsToBlur.has(l) ? result.scores[i] : 0),
+  const labels = data.map(item => item.label);
+  const scores = data.map(item => item.score);
+
+  if (!labels.length || !scores.length || labels.length !== scores.length) {
+    console.error("❌ Error: 'labels' or 'scores' arrays are empty or mismatched.");
+    throw new Error("Unexpected response structure: failed to parse arrays.");
+  }
+  // --- END: PARSING LOGIC ---
+
+  const topLabel = labels[0];
+  const topScore = scores[0];
+
+  // Calculate the total score of all "blur" labels
+  const blurScore = labels.reduce(
+    (sum, l, i) => sum + (labelsToBlur.has(l) ? scores[i] : 0),
     0
   );
 
-  console.log(`🏆 ${topLabel} (${topScore.toFixed(2)}), Σ blur: ${blurScore.toFixed(2)}`);
+  const shouldBlur = blurScore >= 0.6;
+
+  // --- START: NEW DETAILED, READABLE LOGGING ---
+  const logTitle = shouldBlur
+    ? `🔴 BLURRING (Total Blur Score: ${blurScore.toFixed(3)})`
+    : `🟢 LEAVING VISIBLE (Total Blur Score: ${blurScore.toFixed(3)})`;
+  
+  // Create a collapsible group in the console
+  console.group(logTitle);
+  console.log(`Original Text (snippet): "${text.slice(0, 100)}..."`);
+  
+  // Log all scores
+  console.log("--- Full Classification Scores ---");
+  labels.forEach((label, i) => {
+    const score = scores[i];
+    if (labelsToBlur.has(label)) {
+      // Highlight labels that contribute to the blur score
+      console.log(`  %c(BLUR) ${label}:%c ${score.toFixed(3)}`, 'font-weight: bold; color: #b91c1c;', 'color: inherit;');
+    } else {
+      console.log(`  (no) ${label}: ${score.toFixed(3)}`);
+    }
+  });
+
+  console.groupEnd();
+  // --- END: NEW DETAILED, READABLE LOGGING ---
 
   return {
-    shouldBlur: blurScore >= 0.5,
+    shouldBlur: shouldBlur,
     label: topLabel,
-    score: blurScore >= 0.5 ? blurScore : topScore
+    score: shouldBlur ? blurScore : topScore
   };
 }
+
 
 // --- Chrome message listener ---
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {

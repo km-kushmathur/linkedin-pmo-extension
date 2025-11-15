@@ -12,7 +12,8 @@
   ],
   "host_permissions": [
     "https://*.linkedin.com/*",
-    "https://api-inference.huggingface.co/*"
+    "https://api-inference.huggingface.co/*",
+    "https://router.huggingface.co/*"
   ],
   "background": {
     "service_worker": "background.js"
