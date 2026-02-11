@@ -4,7 +4,7 @@ A Chrome extension that detects and blurs "PMO" (Piss Me Off) posts on LinkedIn 
 
 ## How It Works
 
-Uses **on-device AI** powered by [Transformers.js](https://huggingface.co/docs/transformers.js) to classify LinkedIn posts in real-time. Zero-shot classification determines if a post is PMO (bragging/flexing) and blurs it with a tasteful overlay. **No data ever leaves your browser.**
+Uses **on-device AI** powered by [Transformers.js](https://huggingface.co/docs/transformers.js) to classify LinkedIn posts in real-time. Zero-shot classification determines if a post is PMO (bragging/flexing) and blurs it with a clean overlay. **No data ever leaves your browser.**
 
 ### Features
 
