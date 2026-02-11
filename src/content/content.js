@@ -28,6 +28,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
             document.querySelectorAll('[data-processed]').forEach(el => el.removeAttribute('data-processed'));
         } else {
             // Toggle ON: re-scan all posts
+            modelReady = false; // force fresh model status check
             document.querySelectorAll('[data-processed]').forEach(el => el.removeAttribute('data-processed'));
             checkForNewPosts();
         }

@@ -112,19 +112,18 @@ async function handleClassify(text, sensitivity = 50) {
             0
         );
 
-        // Map sensitivity (0-100) to threshold (0.85 down to 0.25)
-        const threshold = 0.85 - (sensitivity / 100) * 0.60;
-        const shouldBlur = blurScore >= threshold;
-
         // PMO score as percentage (0-100)
         const pmoScore = Math.round(blurScore * 100);
+
+        // Sensitivity IS the PMO score threshold (0-100 scale)
+        const shouldBlur = pmoScore >= sensitivity;
 
         return {
             shouldBlur,
             label: labels[0],
             score: blurScore,
             pmoScore,
-            threshold
+            threshold: sensitivity
         };
     } catch (error) {
         console.error("Classification error:", error);
