@@ -1,37 +1,58 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn Post Blurrer",
-  "version": "1.0",
-  "description": "Blurs LinkedIn posts that are detected as boastful.",
+  "version": "3.1",
+  "description": "Automatically detects and blurs boastful LinkedIn posts using on-device AI. No data leaves your browser.",
   "permissions": [
     "storage",
-    "activeTab",
-    "runtime",
     "scripting",
-    "tabs"
+    "offscreen"
   ],
   "host_permissions": [
     "https://*.linkedin.com/*",
-    "https://api-inference.huggingface.co/*",
-    "https://router.huggingface.co/*"
+    "https://huggingface.co/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background/background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://*.linkedin.com/*"],
-      "js": ["content.js"],
-      "css": ["styles.css"]
+      "matches": [
+        "https://*.linkedin.com/*"
+      ],
+      "js": [
+        "src/content/content.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ]
     }
   ],
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "src/popup/popup.html",
     "default_icon": {
-      "128": "icon.png"
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
     }
   },
   "icons": {
-    "128": "icon.png"
-  }
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/offscreen/offscreen.html",
+        "lib/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
 }

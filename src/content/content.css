@@ -1,0 +1,21 @@
+/* LinkedIn Post Blurrer - Content Styles */
+
+.blurred {
+    filter: blur(10px);
+    transition: filter 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.blurred:hover {
+    filter: blur(0);
+    transition: filter 0.2s cubic-bezier(0.0, 0, 0.2, 1);
+}
+
+/* Hide score badge when post is blurred (revealed on hover with the post) */
+.blurred .pmo-score-badge {
+    opacity: 0;
+}
+
+.blurred:hover .pmo-score-badge {
+    opacity: 1;
+}
