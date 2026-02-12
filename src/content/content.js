@@ -97,7 +97,16 @@ function createScoreBadge(pmoScore) {
     transition: opacity 0.25s ease;
   `;
 
-    badge.innerHTML = `<span style="font-size: 10px; line-height: 1;">PMO</span><span style="line-height: 1;">${pmoScore}</span>`;
+    const labelSpan = document.createElement('span');
+    labelSpan.style.cssText = 'font-size: 10px; line-height: 1;';
+    labelSpan.textContent = 'PMO';
+
+    const scoreSpan = document.createElement('span');
+    scoreSpan.style.cssText = 'line-height: 1;';
+    scoreSpan.textContent = pmoScore;
+
+    badge.appendChild(labelSpan);
+    badge.appendChild(scoreSpan);
     return badge;
 }
 

@@ -11,7 +11,7 @@ let classifier = null;
 let modelReady = false;
 let modelLoading = false;
 
-// --- PMO labels: posts to blur ---
+// PMO labels: posts to blur
 const labelsToBlur = new Set([
     "announcing a new job or promotion",
     "internship announcement or reflection",
@@ -25,7 +25,7 @@ const labelsToBlur = new Set([
     "gratitude post about career opportunity"
 ]);
 
-// --- All candidate labels (PMO + non-PMO) ---
+// All candidate labels (PMO + non-PMO)
 const candidateLabels = [
     // PMO labels (will trigger blur)
     "announcing a new job or promotion",
