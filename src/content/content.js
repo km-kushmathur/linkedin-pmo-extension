@@ -197,4 +197,18 @@ function debouncedCheck() {
 const observer = new MutationObserver(debouncedCheck);
 observer.observe(document.body, { childList: true, subtree: true });
 
-setTimeout(checkForNewPosts, 3000);
+// Poll until model is ready, then do the initial scan.
+// On a fresh install the model can take 10-15s to download from Hugging Face,
+// so a single setTimeout would silently miss all posts loaded before model ready.
+function waitForModelAndScan() {
+    checkModelStatus().then(ready => {
+        if (ready) {
+            modelReady = true;
+            checkForNewPosts();
+        } else {
+            setTimeout(waitForModelAndScan, 3000);
+        }
+    });
+}
+
+setTimeout(waitForModelAndScan, 3000);
